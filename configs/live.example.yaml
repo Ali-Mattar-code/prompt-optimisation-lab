@@ -1,0 +1,13 @@
+# Copy to artifacts/local/live.yaml and replace model identifiers if needed.
+# Live outputs are excluded from git until deliberately reviewed and published.
+providers:
+  openai:
+    model: your-openai-model
+  anthropic:
+    model: your-anthropic-model
+  gemini:
+    model: your-gemini-model
+repetitions: 3
+temperature: 0
+max_output_tokens: 800
+

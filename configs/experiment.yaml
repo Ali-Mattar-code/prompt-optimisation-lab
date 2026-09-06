@@ -1,0 +1,22 @@
+experiment_name: cross-model-prompt-landscape
+seed: 20260906
+repetitions: 7
+bootstrap_samples: 1000
+providers:
+  - atlas-sim
+  - nova-sim
+  - ember-sim
+variants:
+  - minimal
+  - role_only
+  - schema_first
+  - few_shot
+  - decompose
+  - verify
+  - evidence_last
+  - full_stack
+objectives:
+  quality_weight: 1.0
+  cost_weight: 0.15
+  latency_weight: 0.10
+

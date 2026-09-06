@@ -1,0 +1,132 @@
+{
+  "evidence_level": "deterministic-synthetic-response-surface",
+  "evidence_boundary": "Validates experiment, grading, optimisation, and analysis code. The named profiles are simulations and are not proxies for commercial models.",
+  "seed": 20260906,
+  "trials": 4032,
+  "robustness_trials": 1728,
+  "tasks": 24,
+  "variants": 8,
+  "models": 3,
+  "repetitions": 7,
+  "best_by_model": {
+    "atlas-sim": {
+      "provider": "atlas-sim",
+      "variant": "schema_first",
+      "trials": 112,
+      "mean_quality": 0.6247767857142856,
+      "pass_rate": 0.5625,
+      "mean_latency_ms": 611.2481286941654,
+      "total_cost_usd": 0.0018954000000000002,
+      "mean_prompt_tokens": 47.1875
+    },
+    "nova-sim": {
+      "provider": "nova-sim",
+      "variant": "verify",
+      "trials": 112,
+      "mean_quality": 0.6520089285714287,
+      "pass_rate": 0.6071428571428571,
+      "mean_latency_ms": 689.0386053514638,
+      "total_cost_usd": 0.0022836,
+      "mean_prompt_tokens": 64.875
+    },
+    "ember-sim": {
+      "provider": "ember-sim",
+      "variant": "role_only",
+      "trials": 112,
+      "mean_quality": 0.6437499999999999,
+      "pass_rate": 0.6160714285714286,
+      "mean_latency_ms": 567.2856488348152,
+      "total_cost_usd": 0.00177,
+      "mean_prompt_tokens": 42.875
+    }
+  },
+  "bootstrap_vs_minimal": {
+    "role_only": {
+      "mean_difference": 0.05356150793650794,
+      "ci95_low": -0.002058531746031745,
+      "ci95_high": 0.10691964285714287,
+      "paired_observations": 504.0
+    },
+    "schema_first": {
+      "mean_difference": 0.0830406746031746,
+      "ci95_low": 0.02985119047619048,
+      "ci95_high": 0.13672123015873017,
+      "paired_observations": 504.0
+    },
+    "few_shot": {
+      "mean_difference": 0.06161210317460318,
+      "ci95_low": 0.010039682539682541,
+      "ci95_high": 0.11612599206349207,
+      "paired_observations": 504.0
+    },
+    "decompose": {
+      "mean_difference": 0.0384672619047619,
+      "ci95_low": -0.01334325396825397,
+      "ci95_high": 0.08896329365079365,
+      "paired_observations": 504.0
+    },
+    "verify": {
+      "mean_difference": 0.10961309523809523,
+      "ci95_low": 0.0593452380952381,
+      "ci95_high": 0.15637400793650794,
+      "paired_observations": 504.0
+    },
+    "evidence_last": {
+      "mean_difference": 0.08235119047619048,
+      "ci95_low": 0.02682043650793651,
+      "ci95_high": 0.1362698412698413,
+      "paired_observations": 504.0
+    },
+    "full_stack": {
+      "mean_difference": 0.11719742063492064,
+      "ci95_low": 0.06645337301587302,
+      "ci95_high": 0.16396329365079365,
+      "paired_observations": 504.0
+    }
+  },
+  "successive_halving": [
+    {
+      "round": 1,
+      "task_budget": 3,
+      "candidates": 8,
+      "leader": "role_only",
+      "leader_quality": 0.5714285714285714,
+      "eliminated": [
+        "verify",
+        "decompose",
+        "minimal",
+        "evidence_last"
+      ]
+    },
+    {
+      "round": 2,
+      "task_budget": 6,
+      "candidates": 4,
+      "leader": "schema_first",
+      "leader_quality": 0.5714285714285714,
+      "eliminated": [
+        "full_stack",
+        "role_only"
+      ]
+    },
+    {
+      "round": 3,
+      "task_budget": 12,
+      "candidates": 2,
+      "leader": "schema_first",
+      "leader_quality": 0.5364087301587303,
+      "eliminated": [
+        "few_shot"
+      ]
+    },
+    {
+      "round": 4,
+      "task_budget": 16,
+      "candidates": 1,
+      "leader": "schema_first",
+      "leader_quality": 0.5853422619047619,
+      "eliminated": []
+    }
+  ],
+  "interpretation": "The synthetic profiles select different prompt architectures and exhibit non-zero cross-model transfer regret. This demonstrates why prompts should be optimised against task-specific holdouts instead of treated as universal text recipes."
+}
