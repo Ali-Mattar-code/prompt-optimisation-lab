@@ -14,6 +14,7 @@ from promptlab.analysis import (  # noqa: E402
     paired_bootstrap_difference,
     pareto_frontier,
     robustness_retention,
+    selection_stability,
     successive_halving,
 )
 from promptlab.experiment import ExperimentRunner, aggregate_trials  # noqa: E402
@@ -26,6 +27,7 @@ from promptlab.robustness import robustness_suite  # noqa: E402
 
 def build_payload() -> tuple[
     dict[str, object],
+    list[dict[str, object]],
     list[dict[str, object]],
     list[dict[str, object]],
     list[dict[str, object]],
@@ -49,6 +51,19 @@ def build_payload() -> tuple[
         rows = [row for row in development if row.provider == model]
         best = max(rows, key=lambda row: (row.mean_quality, -row.mean_prompt_tokens))
         best_by_model[model] = best.to_dict()
+    stability = selection_stability(
+        trials,
+        samples=int(config["bootstrap_samples"]),
+        seed=int(config["seed"]),
+    )
+    winner_stability = {
+        model: next(
+            row["selection_frequency"]
+            for row in stability
+            if row["model"] == model and row["variant"] == best_by_model[model]["variant"]
+        )
+        for model in config["providers"]
+    }
     bootstrap = {
         variant.name: paired_bootstrap_difference(
             trials,
@@ -80,6 +95,8 @@ def build_payload() -> tuple[
         "models": len(providers),
         "repetitions": config["repetitions"],
         "best_by_model": best_by_model,
+        "development_winner_selection_frequency": winner_stability,
+        "selection_stability_method": "paired task-cluster bootstrap on development tasks",
         "bootstrap_vs_minimal": bootstrap,
         "successive_halving": halving,
         "interpretation": (
@@ -88,14 +105,14 @@ def build_payload() -> tuple[
             "against task-specific holdouts instead of treated as universal text recipes."
         ),
     }
-    return payload, effects, frontier, transfer, robustness, development
+    return payload, effects, frontier, transfer, robustness, stability, development
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the deterministic prompt-science benchmark.")
     parser.add_argument("--verify", action="store_true", help="Verify without rewriting artifacts.")
     args = parser.parse_args()
-    payload, effects, frontier, transfer, robustness, development = build_payload()
+    payload, effects, frontier, transfer, robustness, stability, development = build_payload()
     if not args.verify:
         output = ROOT / "artifacts/demo"
         write_json(output / "summary.json", payload)
@@ -103,6 +120,7 @@ def main() -> int:
         write_csv(output / "pareto_frontier.csv", frontier)
         write_csv(output / "cross_model_transfer.csv", transfer)
         write_csv(output / "robustness_retention.csv", robustness)
+        write_csv(output / "selection_stability.csv", stability)
         write_report(output / "report.md", payload)
         write_quality_svg(output / "quality_by_model.svg", development)
     best = payload["best_by_model"]

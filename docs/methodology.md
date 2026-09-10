@@ -20,6 +20,8 @@ The Prompt Genome contains seven controlled components. Eight named architecture
 
 The deterministic provider samples from a stable SHA-256-derived response surface. Changing the seed changes the sample while preserving reproducibility. Pairing by model, task and repetition makes architecture comparisons less sensitive to task composition. Bootstrap intervals use 1,000 seeded resamples.
 
+Development-winner stability uses a separate paired task-cluster bootstrap. A draw samples complete development tasks with replacement while retaining every variant and repetition for each sampled task, then reruns the quality-first selection rule. The resulting selection frequency measures sensitivity to the composition of this development suite; it is not a posterior probability that a prompt is universally optimal.
+
 ## Optimisation without leakage
 
 Successive halving operates only on development tasks. Cross-model transfer freezes the source profile's development winner before evaluating target-profile holdouts. The target oracle is reported only as an analytical upper bound; it is not available during source selection.
@@ -41,4 +43,3 @@ The synthetic profiles contain declared task-category skill, prompt-component ef
 - correct for multiple comparisons when screening many variants;
 - preregister primary outcomes before expensive runs;
 - analyse failure clusters, not only aggregate scores.
-

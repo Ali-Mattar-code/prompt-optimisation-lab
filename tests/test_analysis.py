@@ -8,6 +8,7 @@ from promptlab.analysis import (
     paired_bootstrap_difference,
     pareto_frontier,
     robustness_retention,
+    selection_stability,
     successive_halving,
 )
 from promptlab.genome import PromptGenome
@@ -69,6 +70,23 @@ def test_bootstrap_and_component_effects() -> None:
     assert all(row["effect"] > 0 for row in role_effects)
     with pytest.raises(ValueError, match="No paired"):
         paired_bootstrap_difference(values, "missing")
+
+
+def test_selection_stability_resamples_complete_tasks() -> None:
+    rows = selection_stability(sample_trials(), samples=200, seed=9)
+    assert len(rows) == 4
+    for model in {row["model"] for row in rows}:
+        model_rows = [row for row in rows if row["model"] == model]
+        assert sum(row["selection_count"] for row in model_rows) == 200
+        assert sum(row["selection_frequency"] for row in model_rows) == pytest.approx(1.0)
+        role = next(row for row in model_rows if row["variant"] == "role")
+        assert role["point_estimate_winner"] is True
+        assert role["selection_frequency"] == 1.0
+
+
+def test_selection_stability_rejects_missing_split() -> None:
+    with pytest.raises(ValueError, match="No trials"):
+        selection_stability(sample_trials(), split="missing")
 
 
 def test_cross_model_transfer_and_halving() -> None:

@@ -109,6 +109,84 @@ def paired_bootstrap_difference(
     }
 
 
+def selection_stability(
+    trials: list[Trial],
+    *,
+    split: str = "development",
+    samples: int = 1000,
+    seed: int = 0,
+) -> list[dict[str, Any]]:
+    """Estimate how often each variant wins under task-cluster resampling.
+
+    Resampling complete tasks keeps all variants and repetitions paired within
+    each draw. The result measures sensitivity to development-task composition;
+    it is not a probability that a prompt is universally optimal.
+    """
+    if samples < 1:
+        raise ValueError("samples must be positive")
+    selected = [trial for trial in trials if trial.split == split]
+    if not selected:
+        raise ValueError(f"No trials found for split: {split}")
+
+    quality_cells: dict[tuple[str, str, str], list[float]] = defaultdict(list)
+    token_cells: dict[tuple[str, str], list[float]] = defaultdict(list)
+    for trial in selected:
+        quality_cells[(trial.model, trial.variant, trial.task_id)].append(trial.quality)
+        token_cells[(trial.model, trial.variant)].append(float(trial.prompt_tokens))
+
+    rng = random.Random(seed)
+    rows: list[dict[str, Any]] = []
+    for model in sorted({trial.model for trial in selected}):
+        variants = sorted({trial.variant for trial in selected if trial.model == model})
+        task_ids = sorted({trial.task_id for trial in selected if trial.model == model})
+        complete_tasks = [
+            task_id
+            for task_id in task_ids
+            if all((model, variant, task_id) in quality_cells for variant in variants)
+        ]
+        if not complete_tasks:
+            raise ValueError(f"No complete paired tasks found for model: {model}")
+
+        task_quality = {
+            (task_id, variant): _mean(quality_cells[(model, variant, task_id)])
+            for task_id in complete_tasks
+            for variant in variants
+        }
+        token_means = {
+            variant: _mean(token_cells[(model, variant)]) for variant in variants
+        }
+
+        point_scores = {
+            variant: _mean([task_quality[(task_id, variant)] for task_id in complete_tasks])
+            for variant in variants
+        }
+        point_winner = _selection_winner(variants, point_scores, token_means)
+        counts = {variant: 0 for variant in variants}
+        for _ in range(samples):
+            sampled_tasks = [rng.choice(complete_tasks) for _ in complete_tasks]
+            scores = {
+                variant: _mean([task_quality[(task_id, variant)] for task_id in sampled_tasks])
+                for variant in variants
+            }
+            counts[_selection_winner(variants, scores, token_means)] += 1
+
+        for variant in variants:
+            rows.append(
+                {
+                    "model": model,
+                    "variant": variant,
+                    "development_tasks": len(complete_tasks),
+                    "bootstrap_samples": samples,
+                    "selection_count": counts[variant],
+                    "selection_frequency": counts[variant] / samples,
+                    "point_estimate_winner": variant == point_winner,
+                    "mean_development_quality": point_scores[variant],
+                    "quality_gap_from_winner": point_scores[point_winner] - point_scores[variant],
+                }
+            )
+    return rows
+
+
 def cross_model_transfer(trials: list[Trial]) -> list[dict[str, Any]]:
     models = sorted({trial.model for trial in trials})
     rows: list[dict[str, Any]] = []
@@ -235,6 +313,17 @@ def aggregate_dicts(values: list[Aggregate]) -> list[dict[str, Any]]:
 
 def _mean(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
+
+
+def _selection_winner(
+    variants: list[str],
+    scores: dict[str, float],
+    token_means: dict[str, float],
+) -> str:
+    return min(
+        variants,
+        key=lambda variant: (-scores[variant], token_means[variant], variant),
+    )
 
 
 def _variance(values: list[float]) -> float:

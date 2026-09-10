@@ -40,6 +40,12 @@
       "mean_prompt_tokens": 42.875
     }
   },
+  "development_winner_selection_frequency": {
+    "atlas-sim": 0.303,
+    "nova-sim": 0.572,
+    "ember-sim": 0.493
+  },
+  "selection_stability_method": "paired task-cluster bootstrap on development tasks",
   "bootstrap_vs_minimal": {
     "role_only": {
       "mean_difference": 0.05356150793650794,

@@ -12,7 +12,7 @@
 
 ## Interpretation
 
-The committed evidence proves that the repository can render prompts, execute repeated factorial experiments, grade outputs, maintain development/holdout separation, estimate uncertainty, analyse prompt components, find Pareto-efficient configurations and measure transfer regret.
+The committed evidence proves that the repository can render prompts, execute repeated factorial experiments, grade outputs, maintain development/holdout separation, estimate uncertainty, analyse prompt components, measure development-winner selection stability, find Pareto-efficient configurations and measure transfer regret.
 
 It does not establish the best prompt for an external model. The profile names `atlas-sim`, `nova-sim` and `ember-sim` are fictional and deliberately avoid resembling provider product names.
 
@@ -25,4 +25,3 @@ pytest
 ```
 
 Every generated artifact states or links to this boundary. Live evidence belongs in `artifacts/live/` until it has been checked for secrets, licences, customer information, pricing accuracy and methodological comparability.
-

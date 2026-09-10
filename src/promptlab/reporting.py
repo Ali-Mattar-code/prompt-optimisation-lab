@@ -24,13 +24,19 @@ def markdown_report(summary: dict[str, Any]) -> str:
         "",
         "## Best development prompt by model",
         "",
-        "| Model profile | Variant | Mean quality | Pass rate | Prompt tokens |",
-        "|---|---|---:|---:|---:|",
+        (
+            "| Model profile | Variant | Mean quality | Pass rate | Prompt tokens | "
+            "Selection stability |"
+        ),
+        "|---|---|---:|---:|---:|---:|",
     ]
     for model, row in best.items():
+        stability = summary.get("development_winner_selection_frequency", {}).get(model)
+        stability_text = f"{stability:.1%}" if isinstance(stability, (int, float)) else "n/a"
         lines.append(
             f"| {model} | {row['variant']} | {row['mean_quality']:.3f} | "
-            f"{row['pass_rate']:.1%} | {row['mean_prompt_tokens']:.1f} |"
+            f"{row['pass_rate']:.1%} | {row['mean_prompt_tokens']:.1f} | "
+            f"{stability_text} |"
         )
     lines.extend(
         [
@@ -39,8 +45,15 @@ def markdown_report(summary: dict[str, Any]) -> str:
             "",
             summary["interpretation"],
             "",
+            "Selection stability is the share of paired task-cluster bootstrap resamples in which",
+            "the reported development winner remains selected. It measures sensitivity to the task",
+            "suite, not the probability that a prompt is universally best.",
+            "",
             "The machine-readable result, component effects, Pareto frontier, transfer matrix,",
-            "and successive-halving trace are stored beside this report.",
+            (
+                "selection-stability table, and successive-halving trace are stored "
+                "beside this report."
+            ),
         ]
     )
     return "\n".join(lines) + "\n"

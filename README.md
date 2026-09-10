@@ -33,13 +33,13 @@ The central question is not *“What is the greatest prompt?”* It is:
 
 The three synthetic profiles select three different development winners:
 
-| Synthetic profile | Winning architecture | Mean quality | Pass rate | Mean prompt tokens |
-|---|---|---:|---:|---:|
-| `atlas-sim` | `schema_first` | 0.625 | 56.2% | 47.2 |
-| `nova-sim` | `verify` | 0.652 | 60.7% | 64.9 |
-| `ember-sim` | `role_only` | 0.644 | 61.6% | 42.9 |
+| Synthetic profile | Winning architecture | Mean quality | Pass rate | Mean prompt tokens | Winner stability |
+|---|---|---:|---:|---:|---:|
+| `atlas-sim` | `schema_first` | 0.625 | 56.2% | 47.2 | **30.3%** |
+| `nova-sim` | `verify` | 0.652 | 60.7% | 64.9 | **57.2%** |
+| `ember-sim` | `role_only` | 0.644 | 61.6% | 42.9 | **49.3%** |
 
-This is an intentionally constructed research landscape, not a claim that a real provider prefers any specific variant. It verifies that the lab can detect model–prompt interactions, prompt over-specification, transfer regret and efficiency trade-offs.
+Winner stability is the share of 1,000 paired task-cluster bootstrap resamples that select the same development winner. The modest values are useful negative evidence: a narrow point-estimate lead should not be mistaken for a universal recommendation. This is an intentionally constructed research landscape, not a claim that a real provider prefers any specific variant.
 
 ## Why this is professional prompt engineering
 
@@ -97,19 +97,23 @@ Difference-in-means estimates and standard errors quantify how each prompt compo
 
 Each architecture is compared with the minimal baseline on the same model, task and repetition cells. The paired design removes some between-task noise; 1,000 deterministic bootstrap resamples estimate uncertainty.
 
-### 3. Cross-model transfer matrix
+### 3. Development-winner stability
+
+Complete development tasks are resampled as clusters, retaining all variants and repetitions within each draw. Selection frequency reveals when the apparent winner is sensitive to task-suite composition—even when its point estimate ranks first.
+
+### 4. Cross-model transfer matrix
 
 The best development prompt from each source profile is frozen and evaluated on every target profile's holdout tasks. Transfer regret measures the distance from the target profile's holdout oracle.
 
-### 4. Successive-halving optimiser
+### 5. Successive-halving optimiser
 
 Weak variants are eliminated using small task budgets before increasingly large budgets are allocated to survivors. The full elimination trace is preserved, including early choices that later appear suboptimal.
 
-### 5. Quality–cost–latency Pareto frontier
+### 6. Quality–cost–latency Pareto frontier
 
 A configuration enters the frontier only when no same-model configuration is simultaneously higher quality, shorter and faster. This prevents a very large prompt from winning solely through a small quality improvement.
 
-### 6. Robustness laboratory
+### 7. Robustness laboratory
 
 Untouched holdout tasks are transformed with three deterministic stressors:
 
@@ -119,7 +123,7 @@ Untouched holdout tasks are transformed with three deterministic stressors:
 
 Quality retention is reported by model and architecture.
 
-### 7. Live multi-provider execution
+### 8. Live multi-provider execution
 
 Adapters are implemented for:
 
@@ -216,6 +220,7 @@ The dashboard contains:
 | [`cross_model_transfer.csv`](artifacts/demo/cross_model_transfer.csv) | Source–target prompt transfer and regret |
 | [`pareto_frontier.csv`](artifacts/demo/pareto_frontier.csv) | Non-dominated quality, prompt-length and latency configurations |
 | [`robustness_retention.csv`](artifacts/demo/robustness_retention.csv) | Clean versus stressed holdout performance |
+| [`selection_stability.csv`](artifacts/demo/selection_stability.csv) | Task-cluster bootstrap selection frequency for every model–variant pair |
 | [`report.md`](artifacts/demo/report.md) | Human-readable generated research report |
 
 ## Repository map
@@ -238,6 +243,7 @@ docs/                    methodology, architecture, evidence and live-run protoc
 - task-specific deterministic graders operate end to end;
 - the optimiser can eliminate variants under increasing budgets;
 - development winners can be evaluated without retuning on holdouts;
+- development-winner sensitivity to task composition is measured rather than hidden;
 - cross-profile transfer regret and Pareto efficiency are computed;
 - failed trials remain part of aggregate results.
 
@@ -254,4 +260,3 @@ See the [methodology](docs/methodology.md), [architecture](docs/architecture.md)
 ## Author
 
 Built by [Ali Mattar](https://github.com/Ali-Mattar-code) as an applied-AI research and engineering portfolio project.
-
